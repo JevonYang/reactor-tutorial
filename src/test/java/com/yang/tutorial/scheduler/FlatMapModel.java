@@ -1,6 +1,6 @@
 package com.yang.tutorial.scheduler;
 
-import com.yang.tutorial.pool.ThreadPoolService;
+import com.yang.tutorial.service.ThreadPoolService;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import reactor.core.publisher.Flux;
@@ -12,25 +12,29 @@ import java.util.concurrent.*;
 @Slf4j
 public class FlatMapModel {
 
+    private final static int Count = 100;
+
+    ExecutorService executorService = ThreadPoolService.getInstance("flatMap-pool-%d");
+
     @Test
     public void apply() throws InterruptedException {
 
-        ExecutorService executorService = ThreadPoolService.getInstance("flatMap-pool-%d");
         CountDownLatch finishedLatch = new CountDownLatch(1);
-
-        Flux.range(0, 200).subscribeOn(Schedulers.newElastic("sub")).flatMap(i -> {
+        long t = System.nanoTime();
+        Flux.range(0, Count).flatMap(i -> {
+            log.info("before {}", i);
             return Mono.just(i).subscribeOn(Schedulers.fromExecutor(executorService))
                     .map(integer -> {
+                        log.info("is running： {}", i);
                         try {
-                            Thread.sleep(2000);
+                            Thread.sleep(200);
                         } catch (InterruptedException ex) {
                             log.error("InterruptedException: ", ex);
                         }
-                        log.info("中间过程： {}", i);
                         return integer + "";
                     });
         }).publishOn(Schedulers.immediate()).subscribe(result -> {
-            log.info("======================> 输出内容： {}", result);
+            log.info("============> 输出内容： {}", result);
         }, throwable -> {
 
         }, () -> {
@@ -38,6 +42,8 @@ public class FlatMapModel {
         });
 
         finishedLatch.await();
+        t = (System.nanoTime() - t) / 1000000; //ms
+        System.out.println("FlatMapModel TPS: " + Count * 1000 / t);
         executorService.shutdown();
     }
 
