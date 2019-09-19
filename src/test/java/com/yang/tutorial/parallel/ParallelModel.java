@@ -1,4 +1,4 @@
-package com.yang.tutorial.scheduler;
+package com.yang.tutorial.parallel;
 
 import com.yang.tutorial.service.ThreadPoolService;
 import lombok.extern.slf4j.Slf4j;

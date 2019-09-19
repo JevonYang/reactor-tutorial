@@ -11,8 +11,11 @@ import reactor.core.publisher.Mono;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Slf4j
 public class Contrast {
@@ -97,9 +100,70 @@ public class Contrast {
     }
 
     @Test
-    public void completableFutureStyle() {
+    public void completableFutureStyle() throws InterruptedException, ExecutionException {
         long t = System.nanoTime();
+        CompletableFuture<Set<String>> oldRelationFuture = CompletableFuture.supplyAsync(() -> {
+            try {
+                return service.queryScope().getSubId().stream()
+                        .map(s -> s + "")
+                        .collect(Collectors.toSet());
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            return null;
+        }, executorService);
 
+        CompletableFuture<Set<String>> newRelationFuture = CompletableFuture.supplyAsync(() -> inputScope.getSubId().stream()
+                .map(s -> s + "")
+                .collect(Collectors.toSet()), executorService);
+
+        Set<String> oldRelation = oldRelationFuture.get();
+        Set<String> newRelation = newRelationFuture.get();
+
+        Set<String> needDeleted = new HashSet<>();
+        needDeleted.addAll(newRelation);
+        needDeleted.addAll(oldRelation);
+        needDeleted.removeAll(newRelation);
+
+        Stream<CompletableFuture<String>> needDeletedSet = needDeleted.stream()
+                .map(CompletableFuture::completedFuture);
+
+        Set<String> needUpdate = new HashSet<>();
+        needUpdate.addAll(newRelation);
+        needUpdate.addAll(oldRelation);
+        needUpdate.removeAll(oldRelation);
+
+        Stream<CompletableFuture<String>> needUpdateSet = needUpdate.stream()
+                .map(CompletableFuture::completedFuture);
+
+
+//        Set<Boolean> set0 =
+                needDeletedSet.map(delItem -> delItem.thenApplyAsync(item -> {
+                    try {
+                        service.delete(item);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    return true;
+                }))
+                .map(CompletableFuture::join)
+                .collect(Collectors.toSet());
+
+
+//        Set<Boolean> set1 =
+                needUpdateSet.map(updateItem -> updateItem.thenApplyAsync(item -> {
+                    try {
+                        service.update(item);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    return true;
+                }))
+                .map(CompletableFuture::join)
+                .collect(Collectors.toSet());
+
+//        System.out.println(set0);
+//        System.out.println(set1);
 
         t = (System.nanoTime() - t) / 1000000;
         log.info("completableFutureStyle操作时间：{}ms", t);
