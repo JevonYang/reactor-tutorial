@@ -1,6 +1,7 @@
 package com.yang.tutorial.example;
 
 import com.yang.tutorial.callback.Boss;
+import com.yang.tutorial.callback.Callback;
 import com.yang.tutorial.callback.Worker;
 import com.yang.tutorial.imperative.ImperBoss;
 import com.yang.tutorial.imperative.ImperWorker;
@@ -28,6 +29,42 @@ public class Examples {
     }
 
     @Test
+    public void callbackHell() {
+        new Callback<String>() {
+            private Worker productManager = new Worker();
+
+            @Override
+            public void apply(String s) {
+                System.out.println("Product Manager got this result" + s);
+                String midResult = s + " + design";
+                System.out.println("产品经理设计完成将任务交给开发");
+                new Thread(() -> {
+                    new Callback<String>() {
+                        private Worker coder = new Worker();
+
+                        @Override
+                        public void apply(String s) {
+                            System.out.println("result...." + s);
+                        }
+
+                        public void coding(String coding) {
+                            coder.work(this, coding);
+                        }
+
+                    }.coding(midResult);
+                }).start();
+            }
+
+            public void doSth(String bigDeal) {
+                System.out.println("Boss将任务交给产品");
+                new Thread(() -> {
+                    this.productManager.work(this, bigDeal);
+                }).start();
+            }
+        }.doSth("coding");
+    }
+
+    @Test
     public void reactive() {
         Mono.just("coding")
                 .map(work -> {
@@ -36,8 +73,8 @@ public class Examples {
                     }
                     return work + " is done!";
                 }).subscribe(result -> {
-                    log.info("boss got the feedback from worker: {}", result);
-                });
+            log.info("boss got the feedback from worker: {}", result);
+        });
 
     }
 
