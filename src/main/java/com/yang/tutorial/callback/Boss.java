@@ -15,7 +15,7 @@ public class Boss implements Callback<String> {
     }
 
     @Override
-    public void apply(String s) {
+    public void callback(String s) {
         log.info("boss got the feedback from worker: {}", s);
     }
 

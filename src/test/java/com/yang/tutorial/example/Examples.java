@@ -32,19 +32,18 @@ public class Examples {
     public void callbackHell() {
         new Callback<String>() {
             private Worker productManager = new Worker();
-
             @Override
-            public void apply(String s) {
-                System.out.println("Product Manager got this result" + s);
-                String midResult = s + " + design";
-                System.out.println("产品经理设计完成将任务交给开发");
+            public void callback(String s) {
+                System.out.println("产品经理 output: " + s);
+                String midResult = s + " coding";
+                System.out.println("产品经理设计完成，再将任务交给开发");
                 new Thread(() -> {
                     new Callback<String>() {
                         private Worker coder = new Worker();
 
                         @Override
-                        public void apply(String s) {
-                            System.out.println("result...." + s);
+                        public void callback(String s) {
+                            System.out.println("result： " + s);
                         }
 
                         public void coding(String coding) {
@@ -55,13 +54,13 @@ public class Examples {
                 }).start();
             }
 
-            public void doSth(String bigDeal) {
+            public void makeBigDeals(String bigDeal) {
                 System.out.println("Boss将任务交给产品");
                 new Thread(() -> {
                     this.productManager.work(this, bigDeal);
                 }).start();
             }
-        }.doSth("coding");
+        }.makeBigDeals("design");
     }
 
     @Test
