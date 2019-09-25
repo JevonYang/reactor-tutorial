@@ -3,6 +3,7 @@ package com.yang.tutorial.reactor;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
 
 public class Dispatcher {
 
@@ -15,9 +16,11 @@ public class Dispatcher {
      * 本例只维护一个selector负责事件选择，netty为了保证性能实现了多个selector来保证循环处理性能，不同事件加入不同的selector的事件缓冲队列
      */
     private Selector selector;
+    private ExecutorService executorService;
 
-    Dispatcher(Selector selector) {
+    Dispatcher(Selector selector, ExecutorService service) {
         this.selector = selector;
+        executorService = service;
     }
 
     //在Dispatcher中注册eventHandler
@@ -43,7 +46,9 @@ public class Dispatcher {
 
             for (Event event : events) {
                 EventHandler eventHandler = eventHandlerMap.get(event.getType());
-                eventHandler.handle(event);
+                executorService.submit(() -> {
+                    eventHandler.handle(event);
+                });
             }
         }
     }

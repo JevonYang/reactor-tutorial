@@ -1,8 +1,11 @@
 package com.yang.tutorial.reactor;
 
+import lombok.extern.slf4j.Slf4j;
+
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
+@Slf4j
 public class Acceptor implements Runnable {
 
     /**
@@ -39,7 +42,7 @@ public class Acceptor implements Runnable {
     @Override
     public void run() {
         while (true) {
-
+            log.info("等待任务...");
             InputSource source = null;
             try {
                 // 相当于 serversocket.accept()，接收输入请求，该例从请求队列中获取输入请求
