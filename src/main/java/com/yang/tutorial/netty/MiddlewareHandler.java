@@ -21,5 +21,14 @@ public class MiddlewareHandler extends SimpleChannelInboundHandler<HttpObject> {
         log.info("MiddlewareHandler接收到消息");
         ctx.fireChannelRead(msg);
         ctx.fireChannelActive();
+        ctx.channel().write(msg).addListener(new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture future) throws Exception {
+                if (future.isSuccess()) {
+                    System.out.println("================> 完成了");
+                }
+            }
+        });
+
     }
 }

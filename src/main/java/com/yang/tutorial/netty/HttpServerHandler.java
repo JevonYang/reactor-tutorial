@@ -34,8 +34,38 @@ public class HttpServerHandler extends SimpleChannelInboundHandler<HttpObject> {
     final static ListeningExecutorService service = MoreExecutors.listeningDecorator(newFixedThreadPool());
 
     @Override
+    public void channelRegistered(ChannelHandlerContext ctx) throws Exception {
+        log.info("HttpServerHandler channelRegistered");
+        super.channelRegistered(ctx);
+    }
+
+    @Override
+    public void channelUnregistered(ChannelHandlerContext ctx) throws Exception {
+        log.info("HttpServerHandler channelUnregistered");
+        super.channelUnregistered(ctx);
+    }
+
+    @Override
+    public void channelActive(ChannelHandlerContext ctx) throws Exception {
+        log.info("HttpServerHandler channelActive");
+        super.channelActive(ctx);
+    }
+
+    @Override
+    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+        log.info("HttpServerHandler channelInactive");
+        super.channelInactive(ctx);
+    }
+
+    @Override
+    public void channelReadComplete(ChannelHandlerContext ctx) throws Exception {
+        log.info("HttpServerHandler channelReadComplete");
+        super.channelReadComplete(ctx);
+    }
+
+    @Override
     protected void channelRead0(ChannelHandlerContext ctx, HttpObject msg) throws Exception {
-        service.submit(() -> {
+         service.submit(() -> {
             if (msg instanceof HttpRequest) {
                 log.info("HttpServerHandler接收到信息: {}", ((HttpRequest) msg).uri());
                 ByteBuf content = Unpooled.copiedBuffer("Hello, World", CharsetUtil.UTF_8);
@@ -49,6 +79,6 @@ public class HttpServerHandler extends SimpleChannelInboundHandler<HttpObject> {
                 }
                 ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
             }
-        });
+         });
     }
 }

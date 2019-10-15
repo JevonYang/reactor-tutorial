@@ -23,7 +23,7 @@ public class NettyHttpServer {
                     .channel(NioServerSocketChannel.class)
                     .childHandler(new HttpServerInitializer());
 
-            ChannelFuture channelFuture = serverBootstrap.bind(8888).sync();
+            ChannelFuture channelFuture = serverBootstrap.bind(8080).sync();
             channelFuture.channel().closeFuture().sync();
         } finally {
             bossGroup.shutdownGracefully();
