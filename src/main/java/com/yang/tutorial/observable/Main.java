@@ -21,7 +21,7 @@ public class Main {
         //		CoreSubscriber subscriber = Operators.toCoreSubscriber(actual); --> actual -> LambdaSubscriber
         //
         //		if (publisher instanceof OptimizableOperator) {
-        //			OptimizableOperator operator = (OptimizableOperator) publisher;
+        //			OptimizableOperator operator = (OptimizableOperator) publisher; ---> operator -> FluxMapFuseable
         //			while (true) {
         //				subscriber = operator.subscribeOrReturn(subscriber); --> operator -> FluxMapFuseable  subscriber -> new MapFuseableSubscriber<>(actual, mapper);
         //				if (subscriber == null) {
@@ -37,12 +37,12 @@ public class Main {
         //			}
         //		}
         //
-        //		publisher.subscribe(subscriber);  LambdaSubscriber订阅FluxArray
+        //		publisher.subscribe(subscriber);  MapFuseableSubscriber 订阅 FluxArray
         //	}
 
 
         /* 真正开始消费过程 */
-        // 1. Flux.subscribe(actual, array);
+        // 1. FluxArray.subscribe(actual, array);
         //              actual -> FluxMapFuseable.MapFuseableSubscriber
         // 2. s.onSubscribe(new ArraySubscription<>(s, array));
         //              s-> FluxMapFuseable.MapFuseableSubscriber
@@ -53,10 +53,14 @@ public class Main {
         //				actual -> LambdaSubscriber  this -> MapFuseableSubscriber
         // 4. LambdaSubscriber.onSubscribe -> this.subscription = s; -> s.request(Long.MAX_VALUE);
         //              s -> MapFuseableSubscriber
+
+        /* request */
         // 5. MapFuseableSubscriber.request -> s.request(n);
         //              在第三步骤可以看到s被赋值为ArraySubscription，故s -> ArraySubscription
         // 6. ArraySubscription.request -> fastPath() -> s.onNext(t);
         //              在第二步可以看到s为FluxMapFuseable.MapFuseableSubscriber
+
+        /* onNext */
         // 7. FluxMapFuseable.MapFuseableSubscriber.onNext -> v = mapper.apply(t) -> actual.onNext(v)
         //          a) t -> 为单个数据  mapper为传入的lambda表达式
         //          b) actual -> LambdaSubscriber
