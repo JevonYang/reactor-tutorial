@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import reactor.core.publisher.Mono;
 
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 
 @Slf4j
@@ -29,38 +30,47 @@ public class Examples {
     }
 
     @Test
-    public void callbackHell() {
+    public void callbackHell() throws InterruptedException {
+        CountDownLatch countDownLatch = new CountDownLatch(1);
+
+        // 主线程是boss
         new Callback<String>() {
             private Worker productManager = new Worker();
             @Override
             public void callback(String s) {
-                System.out.println("产品经理 output: " + s);
-                String midResult = s + " coding";
-                System.out.println("产品经理设计完成，再将任务交给开发");
+                log.info("产品经理：开始工作");
+                String midResult = "设计(" + s + ")";
+                log.info("产品经理：处理任务并给出原型: " + midResult);
+                log.info("产品经理：将任务交给程序员");
                 new Thread(() -> {
                     new Callback<String>() {
                         private Worker coder = new Worker();
 
                         @Override
                         public void callback(String s) {
-                            System.out.println("result： " + s);
+                            String result = "编程(" + s + ")";
+                            log.info("程序员：完成任务{}", result);
+                            countDownLatch.countDown();
                         }
 
                         public void coding(String coding) {
+                            log.info("程序员：开始工作");
                             coder.work(this, coding);
                         }
 
                     }.coding(midResult);
-                }).start();
+                }, "coder").start();
             }
 
             public void makeBigDeals(String bigDeal) {
-                System.out.println("Boss将任务交给产品");
+                log.info("老板：将任务交给产品");
                 new Thread(() -> {
                     this.productManager.work(this, bigDeal);
-                }).start();
+                }, "Product").start();
             }
-        }.makeBigDeals("design");
+        }.makeBigDeals("项目");
+        log.info("老板：下班回家");
+        countDownLatch.await();
     }
 
     @Test
