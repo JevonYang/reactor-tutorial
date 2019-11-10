@@ -8,6 +8,7 @@ import com.yang.tutorial.imperative.ImperWorker;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
@@ -74,16 +75,31 @@ public class Examples {
     }
 
     @Test
-    public void reactive() {
-        Mono.just("coding")
-                .map(work -> {
-                    for (int i = 0; i < 100; i++) {
-                        log.info("worker is working");
-                    }
-                    return work + " is done!";
+    public void reactive() throws InterruptedException {
+        CountDownLatch countDownLatch = new CountDownLatch(1);
+        Mono.defer(() -> {
+                    log.info("老板：将任务交给产品");
+                    return Mono.just("项目");
+                })
+                .publishOn(Schedulers.newSingle("Product"))
+                .map(s -> {
+                    log.info("产品经理：开始工作");
+                    String midResult = "设计(" + s + ")";
+                    log.info("产品经理：处理任务并给出原型: " + midResult);
+                    log.info("产品经理：将任务交给程序员");
+                    return midResult;
+                }).publishOn(Schedulers.newSingle("Coder"))
+                .map(s-> {
+                    log.info("程序员：开始工作");
+                    String result = "编程(" + s + ")";
+                    log.info("程序员：完成任务{}", result);
+                    return s;
                 }).subscribe(result -> {
-            log.info("boss got the feedback from worker: {}", result);
-        });
+                    System.out.println("项目完成：" + result);
+                    countDownLatch.countDown();
+                });
+        log.info("老板：下班回家");
+        countDownLatch.await();
 
     }
 
