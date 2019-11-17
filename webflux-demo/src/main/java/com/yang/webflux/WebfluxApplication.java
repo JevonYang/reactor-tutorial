@@ -5,6 +5,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.data.redis.core.ReactiveRedisTemplate;
+import org.springframework.http.codec.ServerSentEvent;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
@@ -12,8 +14,12 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Scheduler;
 import reactor.core.scheduler.Schedulers;
+import reactor.util.function.Tuples;
 
+import java.text.SimpleDateFormat;
 import java.time.Duration;
+import java.util.Date;
+import java.util.concurrent.ThreadLocalRandom;
 
 @SpringBootApplication
 @RestController
@@ -56,4 +62,25 @@ public class WebfluxApplication {
     //                   this amount of time.
 
     //    sudo cp wrk /usr/local/bin
+
+    // SSE：服务端推送（Server Send Event），在客户端发起一次请求后会保持该连接，服务器端基于该连接持续向客户端发送数据，从HTML5开始加入。
+
+    @RequestMapping(value = "/time", method = RequestMethod.GET)
+    public Flux<String> getCurrentTime() {
+        return Flux.interval(Duration.ofSeconds(1))
+                .map(l -> new SimpleDateFormat("HH:mm:ss").format(new Date()));
+    }
+
+    @GetMapping("/randomNumbers")
+    public Flux<ServerSentEvent<Integer>> randomNumbers() {
+        log.info("randomNumbers controller!");
+        return Flux.interval(Duration.ofSeconds(1))
+                .map(seq -> Tuples.of(seq, ThreadLocalRandom.current().nextInt()))
+                .map(data -> ServerSentEvent.<Integer>builder()
+                        .event("random")
+                        .id(Long.toString(data.getT1()))
+                        .data(data.getT2())
+                        .build());
+    }
+
 }
