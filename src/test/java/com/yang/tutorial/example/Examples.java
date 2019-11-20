@@ -1,8 +1,6 @@
 package com.yang.tutorial.example;
 
-import com.yang.tutorial.callback.Boss;
-import com.yang.tutorial.callback.Callback;
-import com.yang.tutorial.callback.Worker;
+import com.yang.tutorial.callback.*;
 import com.yang.tutorial.imperative.ImperBoss;
 import com.yang.tutorial.imperative.ImperWorker;
 import lombok.extern.slf4j.Slf4j;
@@ -36,30 +34,24 @@ public class Examples {
 
         // 主线程是boss
         new Callback<String>() {
-            private Worker productManager = new Worker();
+            private ProductManager productManager = new ProductManager();
             @Override
             public void callback(String s) {
-                log.info("产品经理：开始工作");
-                String midResult = "设计(" + s + ")";
-                log.info("产品经理：处理任务并给出原型: " + midResult);
-                log.info("产品经理：将任务交给程序员");
+                log.info("老板：拿到结果，交给程序员 {}", s);
                 new Thread(() -> {
                     new Callback<String>() {
-                        private Worker coder = new Worker();
+                        private Coder coder = new Coder();
 
                         @Override
                         public void callback(String s) {
-                            String result = "编程(" + s + ")";
-                            log.info("程序员：完成任务{}", result);
+                            log.info("程序员：完成任务{}", s);
                             countDownLatch.countDown();
                         }
 
                         public void coding(String coding) {
-                            log.info("程序员：开始工作");
-                            coder.work(this, coding);
+                            coder.work(this, coding); // 在这里的this是产品，所以回调给产品，如果需要回调给boss这输入的则是boss
                         }
-
-                    }.coding(midResult);
+                    }.coding(s);
                 }, "coder").start();
             }
 
@@ -69,7 +61,7 @@ public class Examples {
                     this.productManager.work(this, bigDeal);
                 }, "Product").start();
             }
-        }.makeBigDeals("项目");
+        }.makeBigDeals("一个大项目");
         log.info("老板：下班回家");
         countDownLatch.await();
     }
@@ -88,7 +80,8 @@ public class Examples {
                     log.info("产品经理：处理任务并给出原型: " + midResult);
                     log.info("产品经理：将任务交给程序员");
                     return midResult;
-                }).publishOn(Schedulers.newSingle("Coder"))
+                })
+                .publishOn(Schedulers.newSingle("Coder"))
                 .map(s-> {
                     log.info("程序员：开始工作");
                     String result = "编程(" + s + ")";
