@@ -3,6 +3,8 @@ package com.yang.tutorial.reactor;
 import com.yang.tutorial.service.ThreadPoolService;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Random;
+import java.util.Scanner;
 import java.util.concurrent.ExecutorService;
 
 /**
@@ -12,7 +14,7 @@ import java.util.concurrent.ExecutorService;
 public class ReactorMain {
 
     public static void main(String[] args) {
-        ExecutorService es = ThreadPoolService.getInstance("event-pool-%d");
+        ExecutorService es = ThreadPoolService.getInstance("eventloop-pool-%d");
         Selector selector = new Selector();
         Dispatcher eventLooper = new Dispatcher(selector, es);
         Acceptor acceptor = new Acceptor(selector, 1000);
@@ -22,10 +24,12 @@ public class ReactorMain {
 
         es.submit(acceptor);
         es.submit(eventLooper::handleEvents);
-
-        for (int i = 0; i < 100; i++) {
-            log.info("添加事件： {}", i);
-            acceptor.addNewConnection(new InputSource("事件[" + i + "]", i));
+        Random r = new Random(1);
+        while (true) {
+            Scanner input=new Scanner(System.in);
+            System.out.println("请输入信息：");
+            String content = input.next();
+            acceptor.addNewConnection(new InputSource("事件[" + content + "]", r.nextInt()));
         }
 
     }
