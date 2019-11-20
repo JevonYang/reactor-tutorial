@@ -1,4 +1,7 @@
+server:
+  port: 8081
+
 spring:
   redis:
-    host: 10.245.5.1
+    host: localhost
     timeout: 10000

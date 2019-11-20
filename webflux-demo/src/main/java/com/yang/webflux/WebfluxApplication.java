@@ -34,50 +34,34 @@ public class WebfluxApplication {
     }
 
     @RequestMapping(value = "/hello", method = RequestMethod.GET)
+    public Mono<String> hello1() {
+        return redisTemplate.opsForValue()
+                .get("key");
+    }
+
+    @RequestMapping(value = "/hello-async", method = RequestMethod.GET)
     public Mono<String> hello () throws InterruptedException {
         return redisTemplate.opsForValue()
-                .get("key").log();
+                .get("key")
+                .publishOn(Schedulers.newElastic("async"))
+                .map(s -> {
+                    try {
+                        Thread.sleep(2000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    return s + " hello";
+                });
     }
 
-    @RequestMapping(value = "/hello1", method = RequestMethod.GET)
-    public Mono<String> hello1() {
-        return Mono.just("hello, world");
-    }
-
-    // wrk -t12 -c400 -d30s http://127.0.0.1:8080/index.html
-    // -c, --connections: total number of HTTP connections to keep open with
-    //                   each thread handling N = connections/threads
-    //
-    //-d, --duration:    duration of the test, e.g. 2s, 2m, 2h
-    //
-    //-t, --threads:     total number of threads to use
-    //
-    //-s, --script:      LuaJIT script, see SCRIPTING
-    //
-    //-H, --header:      HTTP header to add to request, e.g. "User-Agent: wrk"
-    //
-    //    --latency:     print detailed latency statistics
-    //
-    //    --timeout:     record a timeout if a response is not received within
-    //                   this amount of time.
-
-    //    sudo cp wrk /usr/local/bin
-
-    // SSE：服务端推送（Server Send Event），在客户端发起一次请求后会保持该连接，服务器端基于该连接持续向客户端发送数据，从HTML5开始加入。
-
-    @RequestMapping(value = "/time", method = RequestMethod.GET)
-    public Flux<String> getCurrentTime() {
+    // SSE：服务端推送（Server Send Event），
+    // 在客户端发起一次请求后会保持该连接，服务器端基于该连接持续向客户端发送数据，从HTML5开始加入。
+    @GetMapping("/time")
+    public Flux<ServerSentEvent<String>> time() {
         return Flux.interval(Duration.ofSeconds(1))
-                .map(l -> new SimpleDateFormat("HH:mm:ss").format(new Date()));
-    }
-
-    @GetMapping("/randomNumbers")
-    public Flux<ServerSentEvent<Integer>> randomNumbers() {
-        log.info("randomNumbers controller!");
-        return Flux.interval(Duration.ofSeconds(1))
-                .map(seq -> Tuples.of(seq, ThreadLocalRandom.current().nextInt()))
-                .map(data -> ServerSentEvent.<Integer>builder()
-                        .event("random")
+                .map(seq -> Tuples.of(seq, new SimpleDateFormat("HH:mm:ss").format(new Date())))
+                .map(data -> ServerSentEvent.<String>builder()
+                        .event("time")
                         .id(Long.toString(data.getT1()))
                         .data(data.getT2())
                         .build());
