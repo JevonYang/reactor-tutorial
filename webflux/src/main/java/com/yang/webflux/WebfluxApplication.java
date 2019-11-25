@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.data.redis.connection.ReactiveSubscription;
 import org.springframework.data.redis.core.ReactiveRedisTemplate;
 import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,6 +20,7 @@ import reactor.util.function.Tuples;
 import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.util.Date;
+import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 
 @SpringBootApplication
@@ -65,6 +67,18 @@ public class WebfluxApplication {
                         .id(Long.toString(data.getT1()))
                         .data(data.getT2())
                         .build());
+    }
+
+    @GetMapping("/redis")
+    public Flux<ServerSentEvent<String>> redis() {
+        return redisTemplate.listenToChannel("hello")
+                .map(ReactiveSubscription.Message::getMessage)
+                .map(data -> ServerSentEvent.<String>builder()
+                        .event("redis")
+                        .id(Long.toString(new Random().nextLong()))
+                        .data(data)
+                        .build())
+                .log();
     }
 
 }
