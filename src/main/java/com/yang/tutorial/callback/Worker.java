@@ -9,7 +9,8 @@ import lombok.extern.slf4j.Slf4j;
 public class Worker {
 
     public void work(Callback<String> callback, String someWork) {
-        callback.callback(someWork);
+        String result = "(" + someWork + ")";
+        callback.callback(result);
     }
 
 }

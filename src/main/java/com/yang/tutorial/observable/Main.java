@@ -9,8 +9,8 @@ public class Main {
         Flux.just("tom", "jack", "allen")
                 // fromArray -> onAssembly -> new FluxArray(array)
                 .map(s-> "hello, " + s)
-                // onAssembly -> new FluxMap<>(this, mapper) this是传入的FluxArray， mapper则为对应的操作
-                //               return onAssembly(new FluxMapFuseable<>(this, mapper));
+                // onAssembly -> new FluxMapFuseable<>(this, mapper) this是传入的FluxArray， mapper则为对应的操作
+                .log()
                 .subscribe(System.out::println);
                 // Flux.subscribe -> new LambdaSubscriber<>() == System.out::println
                 // -> Flux.subscribe
