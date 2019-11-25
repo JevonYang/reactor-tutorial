@@ -9,10 +9,9 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class ImperWorker {
 
-    public String work(String someWork) {
-        for (int i = 0; i < 100; i++) {
-            log.info("worker is working...");
-        }
+    public String work(String someWork) throws InterruptedException {
+        log.info("员工开始工作");
+        Thread.sleep(2000);
         return someWork + " is done!";
     }
 

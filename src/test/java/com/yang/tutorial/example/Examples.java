@@ -22,10 +22,24 @@ public class Examples {
     }
 
     @Test
-    public void callback() {
-        Worker worker = new Worker();
-        Boss boss = new Boss(worker);
-        boss.makeBigDeals("coding");
+    public void callback() throws InterruptedException {
+        CountDownLatch countDownLatch = new CountDownLatch(1);
+        new Callback<String>() {
+            Worker worker = new Worker();
+            @Override
+            public void callback(String s) {
+                log.info("老板拿到结果： {}", s);
+                countDownLatch.countDown();
+            }
+
+            void makeBigDeal(String deal) {
+                log.info("分配工作...");
+                new Thread(() -> worker.work(this, deal), "worker").start();
+                log.info("分配完工作。");
+                log.info("老板下班回家了。。。。");
+            }
+        }.makeBigDeal("A big deal");
+        countDownLatch.await();
 }
 
     @Test

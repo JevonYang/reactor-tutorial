@@ -19,10 +19,9 @@ public class ImperBoss {
 
     public void makeBigDeals(final String someDetail) throws ExecutionException, InterruptedException {
         log.info("分配工作...");
-        CompletableFuture<String> future = CompletableFuture.supplyAsync(() -> worker.work(someDetail));
-        log.info("分配完工作。");
+        String result = worker.work(someDetail);
+        log.info("老板拿到结果: {}", result);
         log.info("老板下班回家了。。。。");
-        log.info("boss got the feedback from worker: {}", future.get());
     }
 
 }
