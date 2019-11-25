@@ -26,7 +26,7 @@ public class Examples {
         Worker worker = new Worker();
         Boss boss = new Boss(worker);
         boss.makeBigDeals("coding");
-    }
+}
 
     @Test
     public void callbackHell() throws InterruptedException {
@@ -34,13 +34,13 @@ public class Examples {
 
         // 主线程是boss
         new Callback<String>() {
-            private ProductManager productManager = new ProductManager();
+            private Worker productManager = new Worker();
             @Override
             public void callback(String s) {
                 log.info("老板：拿到结果，交给程序员 {}", s);
                 new Thread(() -> {
                     new Callback<String>() {
-                        private Coder coder = new Coder();
+                        private Worker coder = new Worker();
 
                         @Override
                         public void callback(String s) {
@@ -86,7 +86,7 @@ public class Examples {
                     log.info("程序员：开始工作");
                     String result = "编程(" + s + ")";
                     log.info("程序员：完成任务{}", result);
-                    return s;
+                    return result;
                 }).subscribe(result -> {
                     System.out.println("项目完成：" + result);
                     countDownLatch.countDown();
