@@ -16,6 +16,10 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.source>1.8</maven.compiler.source>
     <maven.compiler.target>1.8</maven.compiler.target>
+    <encoding>UTF-8</encoding>
+    <scala.version>2.11.12</scala.version>
+    <scala.compat.version>2.11</scala.compat.version>
+    <akka.version>2.4.17</akka.version>
   </properties>
 
   <dependencies>
@@ -59,6 +63,20 @@
       <groupId>com.google.guava</groupId>
       <artifactId>guava</artifactId>
       <version>28.1-jre</version>
+    </dependency>
+
+    <!-- 添加akka的actor依赖 -->
+    <dependency>
+      <groupId>com.typesafe.akka</groupId>
+      <artifactId>akka-actor_2.11</artifactId>
+      <version>2.5.29</version>
+    </dependency>
+
+    <!-- https://mvnrepository.com/artifact/com.typesafe.akka/akka-remote -->
+    <dependency>
+      <groupId>com.typesafe.akka</groupId>
+      <artifactId>akka-remote_2.11</artifactId>
+      <version>2.5.29</version>
     </dependency>
 
     <!-- lombok -->
@@ -111,6 +129,22 @@
           <artifactId>maven-resources-plugin</artifactId>
           <version>3.0.2</version>
         </plugin>
+
+        <!-- Scala Compiler -->
+        <plugin>
+          <groupId>net.alchim31.maven</groupId>
+          <artifactId>scala-maven-plugin</artifactId>
+          <version>3.2.2</version>
+          <executions>
+            <execution>
+              <goals>
+                <goal>compile</goal>
+                <goal>testCompile</goal>
+              </goals>
+            </execution>
+          </executions>
+        </plugin>
+
         <plugin>
           <artifactId>maven-compiler-plugin</artifactId>
           <version>3.8.0</version>
